@@ -1,0 +1,41 @@
+name: Nexora.ai Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Root Dependencies
+        run: npm ci
+
+      - name: Install Client & Server Dependencies
+        run: |
+          npm ci --workspace=server
+          npm ci --workspace=client
+
+      - name: Run Backend Integration Test Suite
+        run: npm test --prefix server
+
+      - name: Validate Client Production Build
+        run: npm run build --workspace=client
+
+      - name: Verify Docker Build (Backend)
+        run: docker build -t nexora-server:test ./server
+
+      - name: Verify Docker Build (Frontend)
+        run: docker build -t nexora-client:test ./client

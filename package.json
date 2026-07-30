@@ -1,0 +1,20 @@
+{
+  "name": "nexora-ai-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise-grade AI Project Management SaaS",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "client:dev": "npm run dev --workspace=client",
+    "server:dev": "npm run dev --workspace=server",
+    "dev": "concurrently --kill-others \"npm run server:dev\" \"npm run client:dev\"",
+    "build": "npm run build --workspace=client",
+    "install:all": "npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

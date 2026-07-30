@@ -1,0 +1,41 @@
+{
+  "name": "nexora-ai-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Enterprise API & Real-time Server for Nexora.ai",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "node tests/testRunner.js",
+    "lint": "eslint src --ext .js",
+    "lint:fix": "eslint src --ext .js --fix",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "@google/genai": "^2.13.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "express-rate-limit": "^8.6.0",
+    "helmet": "^7.2.0",
+    "joi": "^18.2.3",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.24.1",
+    "morgan": "^1.11.0",
+    "multer": "^2.2.0",
+    "nodemailer": "^9.0.3",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.5"
+  }
+}

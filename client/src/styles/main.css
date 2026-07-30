@@ -1,0 +1,254 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ─── 🟣 Electric Indigo & Midnight Cyber Brand Palette ─── */
+  --color-brand-50: hsl(265, 100%, 98%);
+  --color-brand-100: hsl(265, 95%, 94%);
+  --color-brand-200: hsl(265, 90%, 88%);
+  --color-brand-300: hsl(265, 85%, 78%);
+  --color-brand-400: hsl(265, 82%, 68%);
+  --color-brand-500: hsl(265, 85%, 60%);
+  --color-brand-600: hsl(265, 80%, 52%);
+  --color-brand-700: hsl(265, 80%, 44%);
+  --color-brand-800: hsl(265, 80%, 36%);
+  --color-brand-900: hsl(265, 80%, 28%);
+  --color-brand-950: hsl(265, 85%, 16%);
+
+  /* Dynamic theme mappings */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  --color-border-primary: var(--border-primary);
+  --color-border-secondary: var(--border-secondary);
+
+  --color-card-bg: var(--card-bg);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-sidebar-text-active: var(--sidebar-text-active);
+  --color-sidebar-text-muted: var(--sidebar-text-muted);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active-bg: var(--sidebar-active-bg);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT MODE — Bright, Clean, Crisp SaaS with Deep Royal Indigo Sidebar
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  --bg-primary: #f3f4f6;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e5e7eb;
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
+
+  --border-primary: rgba(15, 23, 42, 0.09);
+  --border-secondary: rgba(15, 23, 42, 0.05);
+
+  --card-bg: #ffffff;
+
+  /* Deep Royal Indigo sidebar for light */
+  --sidebar-bg: linear-gradient(180deg, #4338ca 0%, #3730a3 50%, #312e81 100%);
+  --sidebar-bg-solid: #3730a3;
+  --sidebar-text: rgba(255, 255, 255, 0.88);
+  --sidebar-text-active: #ffffff;
+  --sidebar-text-muted: rgba(255, 255, 255, 0.6);
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-hover: rgba(255, 255, 255, 0.12);
+  --sidebar-active-bg: rgba(255, 255, 255, 0.2);
+  --sidebar-accent: #c084fc;
+
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(15, 23, 42, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK MODE — Midnight Cyber Graphite & Electric Neon Purple
+   ═══════════════════════════════════════════════════════════════════ */
+.dark {
+  --bg-primary: #090a10;
+  --bg-secondary: #0f111a;
+  --bg-tertiary: #161926;
+
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+
+  --border-primary: rgba(167, 139, 250, 0.15);
+  --border-secondary: rgba(167, 139, 250, 0.08);
+
+  --card-bg: rgba(15, 17, 26, 0.9);
+
+  /* Midnight Cyber sidebar */
+  --sidebar-bg: linear-gradient(180deg, #0e0f19 0%, #080910 100%);
+  --sidebar-bg-solid: #090a10;
+  --sidebar-text: #cbd5e1;
+  --sidebar-text-active: #ffffff;
+  --sidebar-text-muted: #94a3b8;
+  --sidebar-border: rgba(167, 139, 250, 0.15);
+  --sidebar-hover: rgba(167, 139, 250, 0.12);
+  --sidebar-active-bg: rgba(192, 132, 252, 0.2);
+  --sidebar-accent: #c084fc;
+
+  --glass-bg: rgba(22, 25, 38, 0.85);
+  --glass-border: rgba(167, 139, 250, 0.15);
+}
+
+/* ─── Base Resets ─── */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.4s ease, color 0.3s ease;
+}
+
+/* ─── Glassmorphism Utilities ─── */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid var(--glass-border);
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.2);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(192, 132, 252, 0.4);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
+}
+
+/* ─── Ambient Background Blobs & High-Tech Cyber Grid Pattern ─── */
+.cyber-grid-bg {
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.18) 0%, transparent 65%),
+    radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.14) 0%, transparent 50%),
+    radial-gradient(rgba(167, 139, 250, 0.18) 1.2px, transparent 1.2px),
+    linear-gradient(to right, rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 24px 24px, 48px 48px, 48px 48px;
+  background-position: 0 0, 0 0, 0 0, 0 0, 0 0;
+}
+
+:root .cyber-grid-bg {
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 65%),
+    radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(rgba(124, 58, 237, 0.12) 1.2px, transparent 1.2px),
+    linear-gradient(to right, rgba(124, 58, 237, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(124, 58, 237, 0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 24px 24px, 48px 48px, 48px 48px;
+}
+
+.ambient-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.ambient-bg::before,
+.ambient-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(120px);
+  opacity: 0.65;
+}
+
+.ambient-bg::before {
+  width: 650px;
+  height: 650px;
+  top: -200px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.25), transparent 70%);
+}
+
+.ambient-bg::after {
+  width: 550px;
+  height: 550px;
+  bottom: -200px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.18), transparent 70%);
+}
+
+.dark .ambient-bg::before {
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.3), transparent 70%);
+}
+
+.dark .ambient-bg::after {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.2), transparent 70%);
+}
+
+/* ─── Noise Texture Overlay ─── */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+}
+
+.dark .noise-overlay::before {
+  opacity: 0.035;
+}
+
+/* ─── Smooth Font Rendering ─── */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Selection Color ─── */
+::selection {
+  background: rgba(192, 132, 252, 0.3);
+  color: inherit;
+}
