@@ -24,7 +24,9 @@ const getOnlineUsersForWorkspace = (workspaceId) => {
 export const initSocket = (server) => {
   ioInstance = new Server(server, {
     cors: {
-      origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+      origin: (origin, callback) => {
+        callback(null, true);
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
