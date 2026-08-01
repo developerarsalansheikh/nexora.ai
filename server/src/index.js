@@ -24,6 +24,20 @@ const bootstrap = async () => {
   // Bind and run websocket listener
   initSocket(server);
 
+  app.get("/api/v1", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Welcome to Nexora.ai API 🚀",
+    version: "v1",
+    endpoints: {
+      health: "/api/v1/health",
+      auth: "/api/v1/auth",
+      projects: "/api/v1/projects",
+      tasks: "/api/v1/tasks"
+    }
+  });
+});
+
   // Bind server listener
   server.listen(PORT, () => {
     console.log(`===================================================`);
