@@ -6,7 +6,21 @@
  *   import { API_ENDPOINTS } from '@/constants';
  *   apiClient.get(API_ENDPOINTS.PROJECTS.LIST);
  */
-const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  if (
+    typeof window !== 'undefined' &&
+    !window.location.hostname.includes('localhost') &&
+    !window.location.hostname.includes('127.0.0.1')
+  ) {
+    return 'https://nexora-ai-93tu.onrender.com/api/v1';
+  }
+  return 'http://localhost:5000/api/v1';
+};
+
+const BASE = getApiBaseUrl();
 
 export const API_ENDPOINTS = Object.freeze({
   // ── Health ────────────────────────────────────────────────────────────────
