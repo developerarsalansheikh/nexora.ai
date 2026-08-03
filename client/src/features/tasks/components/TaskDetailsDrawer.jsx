@@ -12,6 +12,8 @@ import {
   useToggleWatcher,
   useDeleteTask,
 } from '../api/useTasks';
+import { useMembers } from '../../members/api/useMembers';
+import { useSprints } from '../../sprints/api/useSprints';
 import { useAuth } from '../../../context/AuthContext';
 
 const PRIORITY_STYLES = {
@@ -43,6 +45,22 @@ export default function TaskDetailsDrawer({
   const { data: task, isLoading } = useTaskDetails(organizationId, workspaceId, projectId, taskId);
   const { data: subtasks } = useSubTasks(organizationId, workspaceId, projectId, taskId);
   const { data: comments } = useTaskComments(organizationId, workspaceId, projectId, taskId);
+  const { data: membersData } = useMembers(organizationId);
+  const { data: sprintData } = useSprints(organizationId, workspaceId, projectId);
+
+  const membersList = Array.isArray(membersData)
+    ? membersData
+    : Array.isArray(membersData?.docs)
+    ? membersData.docs
+    : [];
+
+  const sprintsList = Array.isArray(sprintData?.docs)
+    ? sprintData.docs
+    : Array.isArray(sprintData?.data)
+    ? sprintData.data
+    : Array.isArray(sprintData)
+    ? sprintData
+    : [];
 
   // ─── Mutations ────────────────────────────────────────────────────────────
   const updateTask = useUpdateTask(organizationId, workspaceId, projectId);
@@ -60,6 +78,14 @@ export default function TaskDetailsDrawer({
 
   const handlePriorityChange = (priority) => {
     updateTask.mutate({ taskId, payload: { priority } });
+  };
+
+  const handleAssigneeChange = (assigneeId) => {
+    updateTask.mutate({ taskId, payload: { assignee: assigneeId || null } });
+  };
+
+  const handleSprintChange = (sprintId) => {
+    updateTask.mutate({ taskId, payload: { sprintId: sprintId || null } });
   };
 
   const handleAddComment = (e) => {
@@ -176,11 +202,11 @@ export default function TaskDetailsDrawer({
               <h2 className="text-sm font-bold text-text-primary leading-snug mb-2">{task.title}</h2>
 
               {/* Quick Actions Row */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <select
                   value={task.status}
                   onChange={(e) => handleStatusChange(e.target.value)}
-                  className="px-2.5 py-1 text-[10px] rounded-lg border border-border-primary bg-bg-primary text-text-primary focus:outline-none focus:border-brand-500 font-semibold"
+                  className="px-2.5 py-1 text-[10px] rounded-lg border border-border-primary bg-bg-primary text-text-primary focus:outline-none focus:border-brand-500 font-semibold cursor-pointer"
                 >
                   <option value="backlog">📋 Backlog</option>
                   <option value="todo">🎯 To Do</option>
@@ -192,7 +218,7 @@ export default function TaskDetailsDrawer({
                 <select
                   value={task.priority}
                   onChange={(e) => handlePriorityChange(e.target.value)}
-                  className="px-2.5 py-1 text-[10px] rounded-lg border border-border-primary bg-bg-primary text-text-primary focus:outline-none focus:border-brand-500 font-semibold"
+                  className="px-2.5 py-1 text-[10px] rounded-lg border border-border-primary bg-bg-primary text-text-primary focus:outline-none focus:border-brand-500 font-semibold cursor-pointer"
                 >
                   <option value="no_priority">⚪ No Priority</option>
                   <option value="low">🔵 Low</option>
@@ -201,15 +227,44 @@ export default function TaskDetailsDrawer({
                   <option value="urgent">🚨 Urgent</option>
                 </select>
 
-                {/* Assignee avatar */}
-                {task.assignee ? (
-                  <div className="flex items-center gap-1 px-2.5 py-1 text-[10px] rounded-lg border border-border-primary bg-bg-primary">
-                    <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-brand-600 to-[#9f85ff] text-[7px] font-bold flex items-center justify-center text-white">
-                      {task.assignee.name?.charAt(0)?.toUpperCase()}
-                    </div>
-                    <span className="text-text-secondary">{task.assignee.name?.split(' ')[0]}</span>
-                  </div>
-                ) : null}
+                {/* Assignee Selector Dropdown */}
+                <div className="flex items-center gap-1 px-2.5 py-1 text-[10px] rounded-lg border border-border-primary bg-bg-primary">
+                  <span className="text-[10px]">👤</span>
+                  <select
+                    value={typeof task.assignee === 'object' ? task.assignee?._id || '' : task.assignee || ''}
+                    onChange={(e) => handleAssigneeChange(e.target.value)}
+                    className="text-[10px] font-semibold text-text-primary bg-transparent focus:outline-none cursor-pointer"
+                  >
+                    <option value="" className="bg-bg-secondary text-text-primary">Unassigned</option>
+                    {membersList.map((m) => {
+                      const u = m.userId || m;
+                      const uId = u._id || m._id;
+                      const uName = u.name || u.email || 'Member';
+                      return (
+                        <option key={uId} value={uId} className="bg-bg-secondary text-text-primary">
+                          {uName}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Sprint Selector Dropdown */}
+                <div className="flex items-center gap-1 px-2.5 py-1 text-[10px] rounded-lg border border-border-primary bg-bg-primary">
+                  <span className="text-[10px]">🏃</span>
+                  <select
+                    value={typeof task.sprintId === 'object' ? task.sprintId?._id || '' : task.sprintId || ''}
+                    onChange={(e) => handleSprintChange(e.target.value)}
+                    className="text-[10px] font-semibold text-text-primary bg-transparent focus:outline-none cursor-pointer"
+                  >
+                    <option value="" className="bg-bg-secondary text-text-primary">Backlog (No Sprint)</option>
+                    {sprintsList.map((s) => (
+                      <option key={s._id} value={s._id} className="bg-bg-secondary text-text-primary">
+                        {s.name} ({s.status})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -245,6 +300,45 @@ export default function TaskDetailsDrawer({
 
                   {/* Info Grid */}
                   <div className="grid grid-cols-2 gap-3">
+                    {/* Assignee Card */}
+                    <div className="p-3 rounded-xl border border-border-primary bg-bg-primary/50 space-y-1">
+                      <span className="text-[10px] font-bold uppercase text-text-tertiary tracking-wider block">Assignee</span>
+                      <select
+                        value={typeof task.assignee === 'object' ? task.assignee?._id || '' : task.assignee || ''}
+                        onChange={(e) => handleAssigneeChange(e.target.value)}
+                        className="w-full text-xs font-semibold text-text-primary bg-bg-secondary border border-border-primary rounded-lg px-2 py-1 focus:outline-none focus:border-brand-500 cursor-pointer"
+                      >
+                        <option value="">👤 Unassigned</option>
+                        {membersList.map((m) => {
+                          const u = m.userId || m;
+                          const uId = u._id || m._id;
+                          const uName = u.name || u.email || 'Member';
+                          return (
+                            <option key={uId} value={uId}>
+                              👤 {uName}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+
+                    {/* Sprint Card */}
+                    <div className="p-3 rounded-xl border border-border-primary bg-bg-primary/50 space-y-1">
+                      <span className="text-[10px] font-bold uppercase text-text-tertiary tracking-wider block">Sprint</span>
+                      <select
+                        value={typeof task.sprintId === 'object' ? task.sprintId?._id || '' : task.sprintId || ''}
+                        onChange={(e) => handleSprintChange(e.target.value)}
+                        className="w-full text-xs font-semibold text-text-primary bg-bg-secondary border border-border-primary rounded-lg px-2 py-1 focus:outline-none focus:border-brand-500 cursor-pointer"
+                      >
+                        <option value="">📋 Backlog (No Sprint)</option>
+                        {sprintsList.map((s) => (
+                          <option key={s._id} value={s._id}>
+                            🏃 {s.name} ({s.status})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     <InfoItem label="Type" value={`${TYPE_ICONS[task.type] || ''} ${task.type}`} />
                     <InfoItem label="Reporter" value={task.reporter?.name || 'Unknown'} />
                     <InfoItem label="Story Points" value={task.storyPoints || '—'} />
