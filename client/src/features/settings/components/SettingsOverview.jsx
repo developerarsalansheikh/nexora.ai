@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import { useMyOrganizations, useUpdateOrganization } from '../../organizations/api/useOrganizations';
@@ -7,8 +8,25 @@ const TABS = ['General', 'Profile', 'Members & Roles', 'Integrations', 'Billing'
 
 export default function SettingsOverview() {
   const { user, membership, changePassword } = useAuth();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(0);
   const [copied, setCopied] = useState(false);
+
+  const tabParam = searchParams.get('tab');
+
+  useEffect(() => {
+    if (tabParam === 'integrations') {
+      setActiveTab(3);
+    } else if (tabParam === 'profile') {
+      setActiveTab(1);
+    } else if (tabParam === 'members') {
+      setActiveTab(2);
+    } else if (tabParam === 'billing') {
+      setActiveTab(4);
+    } else if (tabParam === 'security' || tabParam === 'api') {
+      setActiveTab(5);
+    }
+  }, [tabParam]);
 
   const { data: myOrgsData } = useMyOrganizations();
   const updateOrgMutation = useUpdateOrganization();

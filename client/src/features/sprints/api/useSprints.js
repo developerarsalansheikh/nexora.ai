@@ -9,11 +9,19 @@ export const useSprints = (organizationId, workspaceId, projectId, params = {}) 
   return useQuery({
     queryKey: ['sprints', organizationId, workspaceId, projectId, params],
     queryFn: async () => {
-      const { data } = await apiClient.get(
+      const response = await apiClient.get(
         `/organizations/${organizationId}/workspaces/${workspaceId}/projects/${projectId}/sprints`,
         { params },
       );
-      return data ?? {}; // paginated { docs, totalDocs }
+      const payload = response?.data ?? response;
+      const docs = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.docs)
+        ? payload.docs
+        : [];
+      return { docs, data: docs, totalDocs: payload?.meta?.total || payload?.totalDocs || docs.length };
     },
     enabled: !!organizationId && !!workspaceId && !!projectId,
   });
@@ -181,3 +189,28 @@ export const useUpdateRetrospective = (organizationId, workspaceId, projectId, s
     },
   });
 };
+
+/**
+ * Delete a sprint.
+ */
+export const useDeleteSprint = (organizationId, workspaceId, projectId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (sprintId) => {
+      const { data } = await apiClient.delete(
+        `/organizations/${organizationId}/workspaces/${workspaceId}/projects/${projectId}/sprints/${sprintId}`,
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sprints', organizationId, workspaceId, projectId] });
+      queryClient.invalidateQueries({ queryKey: ['active-sprint', organizationId, workspaceId, projectId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', organizationId, workspaceId, projectId] });
+      toast.success('Sprint deleted!');
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Failed to delete sprint.');
+    },
+  });
+};
+

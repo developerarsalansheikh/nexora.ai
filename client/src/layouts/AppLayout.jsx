@@ -44,18 +44,16 @@ export default function AppLayout() {
   const secondaryNavItems = [
     { name: 'Teams', path: '/members', icon: '👥' },
     { name: 'Workspaces', path: '/workspaces', icon: '🏢' },
-    { name: 'Time Tracking', path: '/analytics', icon: '⏱️' },
     { name: 'Billing', path: '/billing', icon: '💳' },
   ];
 
   const settingsSubItems = [
     { name: 'General', path: '/settings', icon: '⚙️' },
+    { name: 'Integrations', path: '/settings?tab=integrations', icon: '🔌' },
     { name: 'Notifications', path: '/settings/notifications', icon: '🔔' },
   ];
 
-  const bottomNavItems = [
-    { name: 'Integrations', path: '/settings', icon: '🔌' },
-  ];
+  const bottomNavItems = [];
 
   const formatRole = (role) => {
     if (!role) return '';

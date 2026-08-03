@@ -1,22 +1,8 @@
 import axios from 'axios';
 
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  if (
-    typeof window !== 'undefined' &&
-    !window.location.hostname.includes('localhost') &&
-    !window.location.hostname.includes('127.0.0.1')
-  ) {
-    return 'https://nexora-ai-93tu.onrender.com/api/v1';
-  }
-  return 'http://localhost:5000/api/v1';
-};
-
 // Instantiate pre-configured Axios instance
 const apiClient = axios.create({
-  baseURL: getApiBaseUrl(),
+  baseURL: 'https://nexora-ai-93tu.onrender.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -74,9 +60,9 @@ apiClient.interceptors.response.use(
 
     // If unauthorized, attempt to perform RTR (except for login/register/logout paths)
     if (
-      formattedError.status === 401 && 
-      !originalRequest._retry && 
-      !originalRequest.url.includes('/auth/login') && 
+      formattedError.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes('/auth/login') &&
       !originalRequest.url.includes('/auth/register') &&
       !originalRequest.url.includes('/auth/refresh')
     ) {

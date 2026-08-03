@@ -17,6 +17,10 @@ export default function SprintPlanningModal({ isOpen, onClose, onSubmit, isLoadi
       startDate: startDate || null,
       endDate: endDate || null,
     });
+    setName('');
+    setGoal('');
+    setStartDate('');
+    setEndDate('');
   };
 
   if (!isOpen) return null;

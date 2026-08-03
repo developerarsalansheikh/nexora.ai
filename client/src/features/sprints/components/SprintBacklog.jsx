@@ -1,13 +1,18 @@
 import React from 'react';
 import { useMoveTasksToSprint } from '../api/useSprints';
+import { FiTrash2, FiPlay, FiCheckCircle, FiChevronRight } from 'react-icons/fi';
 
 export default function SprintBacklog({
   sprints = [],
+  allTasks = [],
   backlogTasks = [],
   organizationId,
   workspaceId,
   projectId,
   onTaskClick,
+  onStartSprint,
+  onCompleteSprint,
+  onDeleteSprint,
 }) {
   const moveTasks = useMoveTasksToSprint(organizationId, workspaceId, projectId);
 
@@ -17,54 +22,182 @@ export default function SprintBacklog({
 
   return (
     <div className="space-y-6">
-      {/* Planned / Active Sprints Sections */}
-      {sprints.map((sprint) => {
-        const isCompleted = sprint.status === 'completed';
-        const isActive = sprint.status === 'active';
+      {/* Planned & Active & Completed Sprints List */}
+      {sprints.length > 0 ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-sm font-bold text-text-primary flex items-center gap-2">
+              <span>🏃</span> Project Sprints
+              <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20">
+                {sprints.length}
+              </span>
+            </h3>
+          </div>
 
-        return (
-          <div
-            key={sprint._id}
-            className={`p-5 rounded-2xl border bg-bg-secondary/40 backdrop-blur-md space-y-4 ${
-              isActive
-                ? 'border-brand-500/40 ring-1 ring-brand-500/20'
-                : 'border-border-primary'
-            }`}
-          >
-            {/* Sprint Section Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-base">{isActive ? '⚡' : isCompleted ? '✅' : '🏃'}</span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-text-primary">{sprint.name}</h3>
-                    <span
-                      className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                        isActive
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : isCompleted
-                          ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                      }`}
-                    >
-                      {sprint.status}
-                    </span>
+          {sprints.map((sprint) => {
+            const isCompleted = sprint.status === 'completed';
+            const isActive = sprint.status === 'active';
+            const isPlanned = sprint.status === 'planned';
+
+            // Filter tasks for this sprint
+            const sprintTasks = allTasks.filter((t) => {
+              if (!t.sprintId) return false;
+              const sId = typeof t.sprintId === 'object' ? t.sprintId._id : t.sprintId;
+              return sId === sprint._id;
+            });
+
+            const totalPoints = sprintTasks.reduce((acc, t) => acc + (t.storyPoints || 0), 0);
+
+            return (
+              <div
+                key={sprint._id}
+                className={`p-5 rounded-2xl border transition-all space-y-4 ${
+                  isActive
+                    ? 'border-brand-500/40 bg-gradient-to-r from-brand-500/5 via-bg-secondary/40 to-transparent ring-1 ring-brand-500/20'
+                    : isCompleted
+                    ? 'border-border-primary bg-bg-secondary/20 opacity-80'
+                    : 'border-border-primary bg-bg-secondary/40 backdrop-blur-md hover:border-brand-500/30'
+                }`}
+              >
+                {/* Sprint Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border-primary/50">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl shrink-0">{isActive ? '⚡' : isCompleted ? '✅' : '🏃'}</span>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-base font-bold text-text-primary">{sprint.name}</h4>
+                        <span
+                          className={`text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md ${
+                            isActive
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              : isCompleted
+                              ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          }`}
+                        >
+                          {sprint.status}
+                        </span>
+                        {totalPoints > 0 && (
+                          <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-bg-tertiary text-text-secondary border border-border-primary">
+                            {totalPoints} Story Points
+                          </span>
+                        )}
+                      </div>
+                      {sprint.goal && (
+                        <p className="text-xs text-text-tertiary mt-0.5">{sprint.goal}</p>
+                      )}
+                    </div>
                   </div>
-                  {sprint.goal && (
-                    <p className="text-xs text-text-tertiary mt-0.5">{sprint.goal}</p>
+
+                  {/* Actions & Dates */}
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <div className="text-xs font-mono text-text-tertiary hidden md:block">
+                      {sprint.startDate ? new Date(sprint.startDate).toLocaleDateString() : 'No start date'}
+                      {' — '}
+                      {sprint.endDate ? new Date(sprint.endDate).toLocaleDateString() : 'No end date'}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {isPlanned && onStartSprint && (
+                        <button
+                          onClick={() => onStartSprint(sprint._id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          <FiPlay size={12} />
+                          <span>Start Sprint</span>
+                        </button>
+                      )}
+
+                      {isActive && onCompleteSprint && (
+                        <button
+                          onClick={() => onCompleteSprint(sprint._id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          <FiCheckCircle size={12} />
+                          <span>Complete Sprint</span>
+                        </button>
+                      )}
+
+                      {onDeleteSprint && (
+                        <button
+                          onClick={() => onDeleteSprint(sprint._id)}
+                          className="p-1.5 rounded-lg hover:bg-rose-500/10 text-text-tertiary hover:text-rose-400 transition-colors cursor-pointer"
+                          title="Delete Sprint"
+                        >
+                          <FiTrash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tasks inside this sprint */}
+                <div className="space-y-2">
+                  {sprintTasks.map((task) => (
+                    <div
+                      key={task._id}
+                      onClick={() => onTaskClick?.(task)}
+                      className="flex items-center justify-between p-3 rounded-xl border border-border-primary bg-bg-primary/80 hover:border-brand-500/30 transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono font-bold text-text-tertiary">{task.key || 'TASK'}</span>
+                        <span className="text-xs font-medium text-text-primary group-hover:text-brand-400 transition-colors">
+                          {task.title}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                            task.status === 'completed' || task.status === 'done'
+                              ? 'bg-emerald-500/10 text-emerald-400'
+                              : task.status === 'in_progress'
+                              ? 'bg-brand-500/10 text-brand-400'
+                              : 'bg-bg-tertiary text-text-tertiary'
+                          }`}
+                        >
+                          {task.status?.replace('_', ' ')}
+                        </span>
+                        {task.storyPoints > 0 && (
+                          <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-bg-tertiary text-text-secondary">
+                            {task.storyPoints} pts
+                          </span>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveToSprint(task._id, null);
+                          }}
+                          className="text-[10px] text-text-tertiary hover:text-amber-400 transition-colors px-1.5 py-0.5 rounded hover:bg-bg-tertiary"
+                          title="Move back to backlog"
+                        >
+                          Move to Backlog
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {sprintTasks.length === 0 && (
+                    <div className="p-4 text-center text-text-tertiary text-xs border border-dashed border-border-primary/60 rounded-xl bg-bg-primary/30">
+                      No tasks in this sprint yet. Assign tasks from the backlog below.
+                    </div>
                   )}
                 </div>
               </div>
-
-              <div className="text-xs font-mono text-text-tertiary">
-                {sprint.startDate ? new Date(sprint.startDate).toLocaleDateString() : 'No start date'}
-                {' — '}
-                {sprint.endDate ? new Date(sprint.endDate).toLocaleDateString() : 'No end date'}
-              </div>
-            </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="p-8 text-center border border-dashed border-border-primary rounded-2xl bg-bg-secondary/20 space-y-2">
+          <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center text-2xl mx-auto">
+            🏃
           </div>
-        );
-      })}
+          <h4 className="text-sm font-bold text-text-primary">No Sprints Created Yet</h4>
+          <p className="text-xs text-text-tertiary max-w-sm mx-auto">
+            Click "+ Create Sprint" above to plan your first iteration for this project.
+          </p>
+        </div>
+      )}
 
       {/* Unassigned Backlog Section */}
       <div className="p-5 rounded-2xl border border-border-primary bg-bg-secondary/40 backdrop-blur-md space-y-4">
@@ -87,7 +220,7 @@ export default function SprintBacklog({
               className="flex items-center justify-between p-3 rounded-xl border border-border-primary bg-bg-primary hover:border-brand-500/30 transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
-                <span className="text-xs font-mono font-bold text-text-tertiary">{task.key}</span>
+                <span className="text-xs font-mono font-bold text-text-tertiary">{task.key || 'TASK'}</span>
                 <span className="text-xs font-medium text-text-primary group-hover:text-brand-400 transition-colors">
                   {task.title}
                 </span>
@@ -127,7 +260,7 @@ export default function SprintBacklog({
           ))}
 
           {backlogTasks.length === 0 && (
-            <div className="p-8 text-center text-text-tertiary text-xs border border-dashed border-border-primary rounded-xl">
+            <div className="p-6 text-center text-text-tertiary text-xs border border-dashed border-border-primary rounded-xl">
               Backlog is clear! All tasks are assigned to sprints.
             </div>
           )}
