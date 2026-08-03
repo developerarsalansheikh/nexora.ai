@@ -156,6 +156,7 @@ export default function TaskBoardPage() {
         onSubmit={handleCreateTask}
         isLoading={createTask.isPending}
         defaultStatus={defaultCreateStatus}
+        organizationId={organizationId}
       />
 
       {/* Task Details Drawer */}

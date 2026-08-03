@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMembers } from '../../members/api/useMembers';
 
 export default function CreateTaskModal({
   isOpen,
@@ -7,6 +8,7 @@ export default function CreateTaskModal({
   onSubmit,
   isLoading,
   defaultStatus = 'backlog',
+  organizationId,
 }) {
   const [form, setForm] = useState({
     title: '',
@@ -20,6 +22,8 @@ export default function CreateTaskModal({
     estimatedHours: '',
     storyPoints: '',
   });
+
+  const { data: members = [] } = useMembers(organizationId);
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -37,6 +41,7 @@ export default function CreateTaskModal({
       type: form.type,
     };
 
+    if (form.assignee) payload.assignee = form.assignee;
     if (form.startDate) payload.startDate = form.startDate;
     if (form.dueDate) payload.dueDate = form.dueDate;
     if (form.estimatedHours) payload.estimatedHours = Number(form.estimatedHours);
@@ -110,6 +115,37 @@ export default function CreateTaskModal({
                 rows={3}
                 className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-border-primary bg-bg-primary text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-brand-500 transition-colors resize-none"
               />
+            </div>
+
+            {/* Assignee */}
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                👤 Assign To
+              </label>
+              {members.length > 0 ? (
+                <select
+                  value={form.assignee}
+                  onChange={handleChange('assignee')}
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-border-primary bg-bg-primary text-text-primary focus:outline-none focus:border-brand-500 transition-colors"
+                >
+                  <option value="">— Unassigned —</option>
+                  {members.map((m) => {
+                    const user = m.user || m;
+                    const userId = user._id || m._id;
+                    const name = user.name || user.email || 'Unknown';
+                    const email = user.email || '';
+                    return (
+                      <option key={userId} value={userId}>
+                        {name}{email && name !== email ? ` (${email})` : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              ) : (
+                <div className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-border-primary bg-bg-primary/50 text-text-tertiary italic">
+                  No members found — invite members from the Members page
+                </div>
+              )}
             </div>
 
             {/* Type & Status Row */}

@@ -253,6 +253,7 @@ export default function SprintDashboardPage() {
         }}
         onSubmit={handleCreateTask}
         isLoading={createTask.isPending}
+        organizationId={organizationId}
       />
 
       {/* Task Details Drawer */}
