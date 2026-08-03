@@ -10,9 +10,11 @@ import {
   useDeleteSprint,
 } from '../api/useSprints';
 import { useProjects } from '../../projects/api/useProjects';
-import { useTasks } from '../../tasks/api/useTasks';
+import { useTasks, useCreateTask } from '../../tasks/api/useTasks';
 import SprintBacklog from '../components/SprintBacklog';
 import SprintPlanningModal from '../components/SprintPlanningModal';
+import CreateTaskModal from '../../tasks/components/CreateTaskModal';
+import TaskDetailsDrawer from '../../tasks/components/TaskDetailsDrawer';
 import ConnectionStatus from '../../realtime/components/ConnectionStatus';
 import OnlineAvatars from '../../realtime/components/OnlineAvatars';
 
@@ -24,6 +26,9 @@ export default function SprintDashboardPage() {
   const workspaceId = membership?.workspaceId || localStorage.getItem('nexora_workspace_id') || user?.currentWorkspaceId;
 
   const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+  const [defaultSprintIdForTask, setDefaultSprintIdForTask] = useState(null);
 
   // Queries
   const { data: projectsData } = useProjects(organizationId, workspaceId, { limit: 50, isArchived: false });
@@ -44,6 +49,7 @@ export default function SprintDashboardPage() {
   const startSprint = useStartSprint(organizationId, workspaceId, projectId);
   const completeSprint = useCompleteSprint(organizationId, workspaceId, projectId);
   const deleteSprint = useDeleteSprint(organizationId, workspaceId, projectId);
+  const createTask = useCreateTask(organizationId, workspaceId, projectId);
 
   const sprints = Array.isArray(sprintData?.docs)
     ? sprintData.docs
@@ -85,6 +91,24 @@ export default function SprintDashboardPage() {
     }
   };
 
+  const handleCreateTask = (payload) => {
+    const finalPayload = { ...payload };
+    if (defaultSprintIdForTask) {
+      finalPayload.sprintId = defaultSprintIdForTask;
+    }
+    createTask.mutate(finalPayload, {
+      onSuccess: () => {
+        setIsCreateTaskModalOpen(false);
+        setDefaultSprintIdForTask(null);
+      },
+    });
+  };
+
+  const handleOpenAddTaskModal = (sprintId = null) => {
+    setDefaultSprintIdForTask(sprintId);
+    setIsCreateTaskModalOpen(true);
+  };
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       {/* Header & Project Selector */}
@@ -97,7 +121,7 @@ export default function SprintDashboardPage() {
             <ConnectionStatus />
           </div>
           <p className="text-xs text-text-secondary mt-1">
-            Plan iterations, manage sprint capacity, track velocity, and monitor execution.
+            Plan iterations, assign tasks to sprints, edit story points, and monitor execution.
           </p>
         </div>
 
@@ -121,6 +145,13 @@ export default function SprintDashboardPage() {
           )}
 
           <OnlineAvatars />
+
+          <button
+            onClick={() => handleOpenAddTaskModal(null)}
+            className="px-3.5 py-2 text-xs rounded-xl bg-bg-secondary hover:bg-bg-tertiary font-semibold transition-colors border border-border-primary text-text-primary flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>+</span> Add Task
+          </button>
 
           <button
             onClick={() => navigate(`/projects/${projectId}/sprints/reports`)}
@@ -198,6 +229,8 @@ export default function SprintDashboardPage() {
         organizationId={organizationId}
         workspaceId={workspaceId}
         projectId={projectId}
+        onTaskClick={(task) => setSelectedTaskId(task._id)}
+        onAddTask={(sprintId) => handleOpenAddTaskModal(sprintId)}
         onStartSprint={handleStartSprint}
         onCompleteSprint={handleCompleteSprint}
         onDeleteSprint={handleDeleteSprint}
@@ -209,6 +242,27 @@ export default function SprintDashboardPage() {
         onClose={() => setIsPlanningModalOpen(false)}
         onSubmit={handleCreateSprint}
         isLoading={createSprint.isPending}
+      />
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={isCreateTaskModalOpen}
+        onClose={() => {
+          setIsCreateTaskModalOpen(false);
+          setDefaultSprintIdForTask(null);
+        }}
+        onSubmit={handleCreateTask}
+        isLoading={createTask.isPending}
+      />
+
+      {/* Task Details Drawer */}
+      <TaskDetailsDrawer
+        isOpen={!!selectedTaskId}
+        onClose={() => setSelectedTaskId(null)}
+        taskId={selectedTaskId}
+        organizationId={organizationId}
+        workspaceId={workspaceId}
+        projectId={projectId}
       />
     </div>
   );

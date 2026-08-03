@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMoveTasksToSprint } from '../api/useSprints';
-import { FiTrash2, FiPlay, FiCheckCircle, FiChevronRight } from 'react-icons/fi';
+import { FiTrash2, FiPlay, FiCheckCircle, FiPlus, FiEdit2 } from 'react-icons/fi';
 
 export default function SprintBacklog({
   sprints = [],
@@ -10,6 +10,7 @@ export default function SprintBacklog({
   workspaceId,
   projectId,
   onTaskClick,
+  onAddTask,
   onStartSprint,
   onCompleteSprint,
   onDeleteSprint,
@@ -18,6 +19,16 @@ export default function SprintBacklog({
 
   const handleMoveToSprint = (taskId, targetSprintId) => {
     moveTasks.mutate({ sprintId: targetSprintId, taskIds: [taskId] });
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
   };
 
   return (
@@ -77,11 +88,9 @@ export default function SprintBacklog({
                         >
                           {sprint.status}
                         </span>
-                        {totalPoints > 0 && (
-                          <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-bg-tertiary text-text-secondary border border-border-primary">
-                            {totalPoints} Story Points
-                          </span>
-                        )}
+                        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-bg-tertiary text-text-secondary border border-border-primary">
+                          {sprintTasks.length} Tasks ({totalPoints} pts)
+                        </span>
                       </div>
                       {sprint.goal && (
                         <p className="text-xs text-text-tertiary mt-0.5">{sprint.goal}</p>
@@ -98,6 +107,17 @@ export default function SprintBacklog({
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {onAddTask && (
+                        <button
+                          onClick={() => onAddTask(sprint._id)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-bg-secondary hover:bg-bg-tertiary text-text-secondary text-xs font-medium border border-border-primary transition-colors cursor-pointer"
+                          title="Add task directly to this sprint"
+                        >
+                          <FiPlus size={12} />
+                          <span>Add Task</span>
+                        </button>
+                      )}
+
                       {isPlanned && onStartSprint && (
                         <button
                           onClick={() => onStartSprint(sprint._id)}
@@ -133,53 +153,86 @@ export default function SprintBacklog({
 
                 {/* Tasks inside this sprint */}
                 <div className="space-y-2">
-                  {sprintTasks.map((task) => (
-                    <div
-                      key={task._id}
-                      onClick={() => onTaskClick?.(task)}
-                      className="flex items-center justify-between p-3 rounded-xl border border-border-primary bg-bg-primary/80 hover:border-brand-500/30 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-mono font-bold text-text-tertiary">{task.key || 'TASK'}</span>
-                        <span className="text-xs font-medium text-text-primary group-hover:text-brand-400 transition-colors">
-                          {task.title}
-                        </span>
-                      </div>
+                  {sprintTasks.map((task) => {
+                    const assigneeObj = typeof task.assignee === 'object' ? task.assignee : null;
+                    const assigneeName = assigneeObj?.name || 'Unassigned';
 
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                            task.status === 'completed' || task.status === 'done'
-                              ? 'bg-emerald-500/10 text-emerald-400'
-                              : task.status === 'in_progress'
-                              ? 'bg-brand-500/10 text-brand-400'
-                              : 'bg-bg-tertiary text-text-tertiary'
-                          }`}
-                        >
-                          {task.status?.replace('_', ' ')}
-                        </span>
-                        {task.storyPoints > 0 && (
-                          <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-bg-tertiary text-text-secondary">
-                            {task.storyPoints} pts
+                    return (
+                      <div
+                        key={task._id}
+                        onClick={() => onTaskClick?.(task)}
+                        className="flex items-center justify-between p-3 rounded-xl border border-border-primary bg-bg-primary/80 hover:border-brand-500/40 transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-mono font-bold text-text-tertiary">{task.key || 'TASK'}</span>
+                          <span className="text-xs font-semibold text-text-primary group-hover:text-brand-400 transition-colors">
+                            {task.title}
                           </span>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMoveToSprint(task._id, null);
-                          }}
-                          className="text-[10px] text-text-tertiary hover:text-amber-400 transition-colors px-1.5 py-0.5 rounded hover:bg-bg-tertiary"
-                          title="Move back to backlog"
-                        >
-                          Move to Backlog
-                        </button>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          {/* Assignee Avatar */}
+                          <div
+                            className="w-6 h-6 rounded-full bg-brand-500/20 text-brand-400 font-bold text-[10px] flex items-center justify-center border border-brand-500/30 shrink-0"
+                            title={`Assignee: ${assigneeName}`}
+                          >
+                            {getInitials(assigneeName)}
+                          </div>
+
+                          <span
+                            className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                              task.status === 'completed' || task.status === 'done'
+                                ? 'bg-emerald-500/10 text-emerald-400'
+                                : task.status === 'in_progress'
+                                ? 'bg-brand-500/10 text-brand-400'
+                                : 'bg-bg-tertiary text-text-tertiary'
+                            }`}
+                          >
+                            {task.status?.replace('_', ' ')}
+                          </span>
+
+                          {task.storyPoints > 0 && (
+                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-bg-tertiary text-text-secondary border border-border-primary">
+                              {task.storyPoints} pts
+                            </span>
+                          )}
+
+                          {/* Reassign / Move Dropdown */}
+                          <select
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => handleMoveToSprint(task._id, e.target.value || null)}
+                            defaultValue={sprint._id}
+                            className="px-2 py-1 text-[10px] font-medium rounded-lg border border-border-primary bg-bg-secondary text-text-secondary focus:outline-none focus:border-brand-500 cursor-pointer"
+                          >
+                            <option value={sprint._id}>In: {sprint.name}</option>
+                            <option value="">Move to Backlog</option>
+                            {sprints
+                              .filter((s) => s._id !== sprint._id && s.status !== 'completed')
+                              .map((s) => (
+                                <option key={s._id} value={s._id}>
+                                  Move to: {s.name}
+                                </option>
+                              ))}
+                          </select>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTaskClick?.(task);
+                            }}
+                            className="p-1 rounded text-text-tertiary hover:text-brand-400 transition-colors"
+                            title="Edit & Assign Details"
+                          >
+                            <FiEdit2 size={13} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {sprintTasks.length === 0 && (
                     <div className="p-4 text-center text-text-tertiary text-xs border border-dashed border-border-primary/60 rounded-xl bg-bg-primary/30">
-                      No tasks in this sprint yet. Assign tasks from the backlog below.
+                      No tasks in this sprint yet. Assign tasks from the backlog below or click "+ Add Task".
                     </div>
                   )}
                 </div>
@@ -209,55 +262,89 @@ export default function SprintBacklog({
               {backlogTasks.length}
             </span>
           </div>
+
+          {onAddTask && (
+            <button
+              onClick={() => onAddTask(null)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-bg-secondary hover:bg-bg-tertiary text-text-secondary text-xs font-medium border border-border-primary transition-colors cursor-pointer"
+            >
+              <FiPlus size={12} />
+              <span>Add Backlog Task</span>
+            </button>
+          )}
         </div>
 
         {/* Backlog Task List */}
         <div className="space-y-2">
-          {backlogTasks.map((task) => (
-            <div
-              key={task._id}
-              onClick={() => onTaskClick?.(task)}
-              className="flex items-center justify-between p-3 rounded-xl border border-border-primary bg-bg-primary hover:border-brand-500/30 transition-colors cursor-pointer group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-mono font-bold text-text-tertiary">{task.key || 'TASK'}</span>
-                <span className="text-xs font-medium text-text-primary group-hover:text-brand-400 transition-colors">
-                  {task.title}
-                </span>
-              </div>
+          {backlogTasks.map((task) => {
+            const assigneeObj = typeof task.assignee === 'object' ? task.assignee : null;
+            const assigneeName = assigneeObj?.name || 'Unassigned';
 
-              <div className="flex items-center gap-3">
-                {task.storyPoints > 0 && (
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-bg-tertiary text-text-secondary">
-                    {task.storyPoints} pts
+            return (
+              <div
+                key={task._id}
+                onClick={() => onTaskClick?.(task)}
+                className="flex items-center justify-between p-3 rounded-xl border border-border-primary bg-bg-primary hover:border-brand-500/40 transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono font-bold text-text-tertiary">{task.key || 'TASK'}</span>
+                  <span className="text-xs font-semibold text-text-primary group-hover:text-brand-400 transition-colors">
+                    {task.title}
                   </span>
-                )}
+                </div>
 
-                {/* Move to Sprint dropdown */}
-                {sprints.filter((s) => s.status !== 'completed').length > 0 && (
-                  <select
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      if (e.target.value) handleMoveToSprint(task._id, e.target.value);
-                    }}
-                    defaultValue=""
-                    className="px-2 py-1 text-[10px] rounded-lg border border-border-primary bg-bg-secondary text-text-secondary focus:outline-none focus:border-brand-500"
+                <div className="flex items-center gap-3">
+                  {/* Assignee Avatar */}
+                  <div
+                    className="w-6 h-6 rounded-full bg-brand-500/20 text-brand-400 font-bold text-[10px] flex items-center justify-center border border-brand-500/30 shrink-0"
+                    title={`Assignee: ${assigneeName}`}
                   >
-                    <option value="" disabled>
-                      Move to sprint...
-                    </option>
-                    {sprints
-                      .filter((s) => s.status !== 'completed')
-                      .map((s) => (
-                        <option key={s._id} value={s._id}>
-                          {s.name} ({s.status})
-                        </option>
-                      ))}
-                  </select>
-                )}
+                    {getInitials(assigneeName)}
+                  </div>
+
+                  {task.storyPoints > 0 && (
+                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-bg-tertiary text-text-secondary border border-border-primary">
+                      {task.storyPoints} pts
+                    </span>
+                  )}
+
+                  {/* Move to Sprint dropdown */}
+                  {sprints.filter((s) => s.status !== 'completed').length > 0 && (
+                    <select
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        if (e.target.value) handleMoveToSprint(task._id, e.target.value);
+                      }}
+                      defaultValue=""
+                      className="px-2.5 py-1 text-[10px] font-semibold rounded-lg border border-brand-500/30 bg-brand-500/10 text-brand-400 focus:outline-none focus:border-brand-500 cursor-pointer"
+                    >
+                      <option value="" disabled>
+                        Assign to Sprint...
+                      </option>
+                      {sprints
+                        .filter((s) => s.status !== 'completed')
+                        .map((s) => (
+                          <option key={s._id} value={s._id} className="bg-bg-secondary text-text-primary">
+                            {s.name} ({s.status})
+                          </option>
+                        ))}
+                    </select>
+                  )}
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTaskClick?.(task);
+                    }}
+                    className="p-1 rounded text-text-tertiary hover:text-brand-400 transition-colors"
+                    title="Edit & Assign Details"
+                  >
+                    <FiEdit2 size={13} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {backlogTasks.length === 0 && (
             <div className="p-6 text-center text-text-tertiary text-xs border border-dashed border-border-primary rounded-xl">
